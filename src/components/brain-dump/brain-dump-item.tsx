@@ -10,6 +10,7 @@ import type { Task } from "@/types";
 
 interface BrainDumpItemProps {
   task: Task;
+  /** SortableItem에서 전달받는 드래그 핸들 props (useSortable의 attributes + listeners) */
   dragHandleProps?: Record<string, unknown>;
 }
 
@@ -24,12 +25,14 @@ export function BrainDumpItem({ task, dragHandleProps }: BrainDumpItemProps) {
         "group flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors",
         isCompleted && "opacity-50",
         bigThreeConfig && `${bigThreeConfig.bgColor} ${bigThreeConfig.borderColor}`,
-        !bigThreeConfig && "bg-card hover:bg-accent/50"
+        !bigThreeConfig && "bg-card hover:bg-accent/50",
       )}
     >
-      <div {...dragHandleProps} className="cursor-grab text-muted-foreground/50 hover:text-muted-foreground">
-        <GripVertical className="h-4 w-4" />
-      </div>
+      {dragHandleProps && (
+        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground">
+          <GripVertical className="h-4 w-4" />
+        </div>
+      )}
 
       <button
         onClick={() => setTaskStatus(task.id, isCompleted ? "pending" : "completed")}
