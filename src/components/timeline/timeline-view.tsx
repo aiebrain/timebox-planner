@@ -45,7 +45,9 @@ export function TimelineDropArea({
     <div
       ref={(node) => {
         setNodeRef(node);
-        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (containerRef && "current" in containerRef) {
+          (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }
       }}
       className="relative"
       style={{ height: totalHeight }}
@@ -80,6 +82,16 @@ export function TimelineDropArea({
   );
 }
 
+/** 타임라인 시간 배열 + 높이 계산 (공유 상수) */
+function getTimelineLayout() {
+  const hours = Array.from(
+    { length: TIMELINE_CONFIG.endHour - TIMELINE_CONFIG.startHour },
+    (_, i) => TIMELINE_CONFIG.startHour + i
+  );
+  const totalHeight = hours.length * TIMELINE_CONFIG.pixelsPerHour;
+  return { hours, totalHeight };
+}
+
 /** Timeline 내부 DnD 핸들링 로직 (공유 DndContext에서 사용) */
 export function useTimelineDnd() {
   const moveTimeBlock = useTimelineStore((s) => s.moveTimeBlock);
@@ -89,11 +101,7 @@ export function useTimelineDnd() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
 
-  const hours = Array.from(
-    { length: TIMELINE_CONFIG.endHour - TIMELINE_CONFIG.startHour },
-    (_, i) => TIMELINE_CONFIG.startHour + i
-  );
-  const totalHeight = hours.length * TIMELINE_CONFIG.pixelsPerHour;
+  const { hours, totalHeight } = getTimelineLayout();
 
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -188,22 +196,13 @@ interface TimelineViewProps {
   };
 }
 
-export function TimelineView({ externalDnd, dndProps }: TimelineViewProps = {}) {
-  const timeBlocks = useTimelineStore((s) => s.getBlocksByTime());
+/** 외부 DndContext 사용하는 TimelineView (Step 3) */
+function TimelineViewExternal({ dndProps }: { dndProps: NonNullable<TimelineViewProps["dndProps"]> }) {
+  const timeBlocks = useTimelineStore((s) => s.timeBlocks);
   const timerStart = useTimerStore((s) => s.start);
 
-  // 내부 DnD용 (externalDnd=false일 때)
-  const internalDnd = useTimelineDnd();
-  const {
-    containerRef,
-    isDropTarget,
-    hours,
-    totalHeight,
-    handleDoubleClick,
-  } = externalDnd && dndProps ? dndProps : internalDnd;
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  const sortedBlocks = [...timeBlocks].sort(
+    (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
   );
 
   const handleStartTimer = useCallback(
@@ -213,18 +212,6 @@ export function TimelineView({ externalDnd, dndProps }: TimelineViewProps = {}) 
       }
     },
     [timerStart]
-  );
-
-  const timelineContent = (
-    <TimelineDropArea
-      containerRef={containerRef}
-      totalHeight={totalHeight}
-      hours={hours}
-      timeBlocks={timeBlocks}
-      isDropTarget={isDropTarget}
-      onDoubleClick={handleDoubleClick}
-      onStartTimer={handleStartTimer}
-    />
   );
 
   return (
@@ -240,19 +227,81 @@ export function TimelineView({ externalDnd, dndProps }: TimelineViewProps = {}) 
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[500px] lg:h-[600px]">
-          {externalDnd ? (
-            timelineContent
-          ) : (
-            <DndContext
-              sensors={sensors}
-              onDragOver={internalDnd.handleDragOver}
-              onDragEnd={internalDnd.handleDragEnd}
-            >
-              {timelineContent}
-            </DndContext>
-          )}
+          <TimelineDropArea
+            containerRef={dndProps.containerRef}
+            totalHeight={dndProps.totalHeight}
+            hours={dndProps.hours}
+            timeBlocks={sortedBlocks}
+            isDropTarget={dndProps.isDropTarget}
+            onDoubleClick={dndProps.handleDoubleClick}
+            onStartTimer={handleStartTimer}
+          />
         </ScrollArea>
       </CardContent>
     </Card>
   );
+}
+
+/** 자체 DndContext를 갖는 독립형 TimelineView */
+function TimelineViewStandalone() {
+  const timeBlocks = useTimelineStore((s) => s.timeBlocks);
+  const timerStart = useTimerStore((s) => s.start);
+  const dnd = useTimelineDnd();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const sortedBlocks = [...timeBlocks].sort(
+    (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
+  );
+
+  const handleStartTimer = useCallback(
+    (block: TimeBlock) => {
+      if (block.taskId) {
+        timerStart(block.taskId, block.id);
+      }
+    },
+    [timerStart]
+  );
+
+  return (
+    <Card className="flex-1">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Clock className="h-4 w-4" />
+          타임라인
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          더블클릭으로 블록 추가 / 할 일을 드래그하여 배치
+        </p>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ScrollArea className="h-[500px] lg:h-[600px]">
+          <DndContext
+            sensors={sensors}
+            onDragOver={dnd.handleDragOver}
+            onDragEnd={dnd.handleDragEnd}
+          >
+            <TimelineDropArea
+              containerRef={dnd.containerRef}
+              totalHeight={dnd.totalHeight}
+              hours={dnd.hours}
+              timeBlocks={sortedBlocks}
+              isDropTarget={dnd.isDropTarget}
+              onDoubleClick={dnd.handleDoubleClick}
+              onStartTimer={handleStartTimer}
+            />
+          </DndContext>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function TimelineView({ externalDnd, dndProps }: TimelineViewProps = {}) {
+  if (externalDnd && dndProps) {
+    return <TimelineViewExternal dndProps={dndProps} />;
+  }
+  return <TimelineViewStandalone />;
 }

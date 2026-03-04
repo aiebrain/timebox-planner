@@ -6,6 +6,7 @@ import { timeToPixels, minutesToPixels, formatDuration, timeToMinutes } from "@/
 import { BIG_THREE_COLORS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { X, GripVertical, Play } from "lucide-react";
+import { useDraggable } from "@dnd-kit/core";
 import type { TimeBlock } from "@/types";
 
 interface TimeBlockItemProps {
@@ -24,6 +25,11 @@ export function TimeBlockItem({ block, onStartTimer }: TimeBlockItemProps) {
   const removeTimeBlock = useTimelineStore((s) => s.removeTimeBlock);
   const tasks = useTaskStore((s) => s.tasks);
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `timeblock-${block.id}`,
+    data: { type: "timeblock", block },
+  });
+
   const top = timeToPixels(block.startTime);
   const height = minutesToPixels(timeToMinutes(block.endTime) - timeToMinutes(block.startTime));
   const task = block.taskId ? tasks.find((t) => t.id === block.taskId) : null;
@@ -33,17 +39,27 @@ export function TimeBlockItem({ block, onStartTimer }: TimeBlockItemProps) {
     ? `${bigThreeConfig.bgColor} ${bigThreeConfig.borderColor}`
     : BLOCK_COLORS[block.type] || BLOCK_COLORS.task;
 
+  const style: React.CSSProperties = {
+    top,
+    height: Math.max(height, 30),
+    ...(transform ? { transform: `translate3d(0, ${transform.y}px, 0)` } : {}),
+  };
+
   return (
     <div
+      ref={setNodeRef}
       className={cn(
         "absolute left-16 right-2 rounded-lg border px-3 py-1.5 group cursor-pointer transition-shadow hover:shadow-md overflow-hidden",
-        colorClass
+        colorClass,
+        isDragging && "opacity-60 shadow-lg z-50 ring-2 ring-primary/40"
       )}
-      style={{ top, height: Math.max(height, 30) }}
+      style={style}
     >
       <div className="flex items-start justify-between h-full">
         <div className="flex items-start gap-1.5 min-w-0 flex-1">
-          <GripVertical className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/40 cursor-grab" />
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+            <GripVertical className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/40" />
+          </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               {task?.bigThreePriority && (
