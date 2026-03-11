@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useHistoryStore } from "@/stores/history-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,10 @@ import Link from "next/link";
 
 export default function HistoryPage() {
   const plans = useHistoryStore((s) => s.plans);
-  const dates = useHistoryStore((s) => s.getAllDates());
+  const dates = useMemo(
+    () => plans.map((p) => p.date).sort().reverse(),
+    [plans]
+  );
 
   return (
     <div className="p-4 lg:p-6 max-w-3xl mx-auto space-y-4">

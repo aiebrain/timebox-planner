@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⏱️ 타임박싱 플래너
 
-## Getting Started
+> AI 커머스 브레인 [@aiebrain](https://www.youtube.com/@aiebrain) 제작
 
-First, run the development server:
+하루를 4단계로 구조화하는 무료 시간관리 플래너입니다.
+
+**데모**: https://timebox-planner-red.vercel.app
+
+---
+
+## 🚀 5분 만에 내 전용 플래너 만들기
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Faiebrain%2Ftimebox-planner)
+
+1. 위 버튼 클릭
+2. GitHub 계정으로 로그인
+3. Deploy → 내 전용 URL 발급 완료!
+
+> 💡 Vercel 무료 플랜으로 충분합니다 (개인 사용 무료)
+
+---
+
+## ✨ 기능
+
+| 단계 | 이름 | 설명 |
+|---|---|---|
+| 1️⃣ | **브레인 덤프** | 머릿속 할 일을 전부 쏟아내기 |
+| 2️⃣ | **빅 3 선정** | 오늘 반드시 끝낼 3가지 선택 |
+| 3️⃣ | **타임라인** | 시간대별 작업 배치 (드래그&드롭) |
+| 4️⃣ | **리뷰** | 하루 마무리 회고 |
+
+- 📅 히스토리 — 과거 기록 조회
+- 📊 분석 — 완료율 / 정확도 통계
+- 🌙 다크모드
+- 💾 로컬 저장 (서버 불필요, 개인정보 유출 없음)
+
+---
+
+## 💻 로컬 실행 (개발자용)
 
 ```bash
+git clone https://github.com/aiebrain/timebox-planner.git
+cd timebox-planner
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+→ http://localhost:3000 접속
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔧 기술 스택
 
-## Learn More
+- **Next.js 16** + **React 19** + **TypeScript**
+- **Tailwind CSS v4** + **shadcn/ui**
+- **Zustand** (localStorage 저장)
+- **dnd-kit** (드래그&드롭)
+- **Recharts** (차트)
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📞 문의
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 유튜브: [@aiebrain](https://www.youtube.com/@aiebrain)
+- 오픈채팅: https://open.kakao.com/o/gfNHYBwh

@@ -17,7 +17,7 @@ import Link from "next/link";
 export default function HistoryDetailPage() {
   const params = useParams();
   const date = params.date as string;
-  const plan = useHistoryStore((s) => s.getPlan(date));
+  const plan = useHistoryStore((s) => s.plans.find((p) => p.date === date));
 
   if (!plan) {
     return (
